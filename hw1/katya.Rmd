@@ -1,0 +1,60 @@
+---
+title: "hw1"
+author: "katya"
+date: '6 февраля 2018 г '
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+### 1.1 
+```{r}
+library(tidyverse)
+library(irr)
+
+df <- read_csv("https://raw.githubusercontent.com/agricolamz/2018_data_analysis_for_linguists/master/data/students/NastyaMelnik57/hw1_agreement/hw1_1_zilo_class.csv")
+
+head(df)
+
+df %>% 
+  distinct(stimulus_source,translation_en) %>% 
+  count(stimulus_source)
+
+df %>% 
+  select(s_id, translation_en, class) %>% 
+  spread(key = s_id, value = class) ->
+  df_short
+head(df_short)
+
+agree(df_short[,-1])
+
+
+
+```
+
+
