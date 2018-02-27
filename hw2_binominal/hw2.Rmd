@@ -1,0 +1,71 @@
+---
+title: "hw2"
+author: "Katya Protsenyuk"
+date: '26 февраля 2018 г '
+output: html_document
+---
+### 1.1
+```{r}
+library(tidyverse)
+library(mosaic)
+
+df <- read_csv("https://raw.githubusercontent.com/agricolamz/2018_data_analysis_for_linguists/master/data/students/katyaprotsenyuk/hw2_binomial/hw2_binomial.csv")
+
+binomial_test <- binom.test(x = df$k, n = df$n, p = df$prior)
+binomial_test
+
+```
+
+### 1.2
+```{r}
+set.seed(42)
+do(1000)*
+  sum(sample(x = 1:0, 
+             size = df$n, 
+             prob = c(df$prior, 1-df$prior), 
+             replace = TRUE)) ->
+  simulations
+simulations %>% 
+  mutate(greater = sum >= df$k) %>% 
+  count(greater)
+
+```
+
+### 1.3
+
+```{r}
+
+alpha_prior <- df$prior*df$n
+alpha_prior
+
+beta_prior <- (1-df$prior)*df$n
+beta_prior
+
+alpha_data <- df$k
+beta_data <- df$n - df$k
+
+alpha_post <- alpha_prior + alpha_data
+beta_post <- beta_prior + beta_data
+
+alpha_post/(alpha_post+beta_post)
+
+```
+### 1.4
+```{r}
+alpha_post <- 1 + alpha_data
+beta_post <- 1 + beta_data
+
+alpha_post/(alpha_post+beta_post)
+
+```
+
+### 1.5
+```{r}
+Биномиальный тест: p-value = 0.6298. Это больше 0,05, нулевую гипотезу не отвергаем
+
+Симуляция: на графике видно, что значение количества успехов 53 находится близко к центру графика, попадая в доверительный интервал. 
+
+Байесовский подход: практически одинаковые результаты у апостериорной вероятности и у неинформативного априорного распределения -- 0.3053124 и 0.2983425 соответственно. 
+
+```
+
