@@ -1,0 +1,127 @@
+---
+title: "hw3"
+author: "Katya Protsenyuk"
+date: '5 марта 2018 г '
+output: html_document
+---
+### 1.1
+
+```{r}
+library(tidyverse)
+library(mosaic)
+library(bootstrap)
+
+
+chekhov <- read_tsv("https://goo.gl/o18uj7")
+
+wodehouse <- read_csv("https://raw.githubusercontent.com/agricolamz/2018_data_analysis_for_linguists/master/data/students/katyaprotsenyuk/hw3_binomial_ci/hw3_wodehouse.csv")
+
+wodehouse %>% 
+  filter(word == 'сэр') -> 
+  sir
+
+sir %>% 
+  group_by(chapter) %>% 
+  summarise(n_sir = count(word)) ->
+  sir_number
+
+wodehouse %>%
+  group_by(chapter) %>% 
+  summarise(n_words_in_chapter = count(chapter)) ->
+  chapters
+
+sir_number <- add_column(sir_number, words_in_chapter = chapters$n_words_in_chapter)
+
+sir_number %>% 
+  mutate(average_sir = n_sir/words_in_chapter) ->
+  sir_number
+
+sir_number %>% 
+  summarise(g_mean = mean(average_sir)) ->
+  grand_mean
+grand_mean
+
+```
+
+### 1.2
+```{r}
+set.seed(42)
+sir_number %>% 
+  distinct(average_sir) ->
+  sir_number_bs
+ 
+sir_number_bs <- bootstrap(sir_number_bs$average_sir, nboot = 10000, theta = mean)$thetastar
+
+sir_number_bs <- data_frame(means = sir_number_bs)  
+
+sir_number_bs %>%
+  summarise(mean = mean(means),
+            q1 = quantile(means, 0.025),
+            q2 = quantile(means, 0.975))->
+  sir_stats
+
+sir_stats %>% 
+  distinct(q1, q2) ->
+  conf_int
+conf_int
+
+```
+
+### 1.3
+```{r}
+
+sir_number %>%
+  group_by(chapter) %>%
+  mutate(low_ci = binom.test(x = n_sir, n = words_in_chapter, ci.method = "Clopper-Pearson")$conf.int[1],
+  up_ci = binom.test(x = n_sir, n = words_in_chapter, ci.method = "Clopper-Pearson")$conf.int[2]) ->
+  sir_number
+
+sir_number %>%
+  mutate(length_int = up_ci - low_ci) ->
+  sir_number
+
+          
+as_tibble(sir_number[which.max(sir_number$length_int),]) 
+
+```
+
+### 1.4
+```{r}
+
+mu <- mean(sir_number$average_sir)
+var <- var(sir_number$average_sir)
+alpha0 <- ((1 - mu) / var - 1 / mu) * mu ^ 2
+beta0 <- alpha0 * (1 / mu - 1)
+
+
+sir_number %>% 
+  group_by(chapter) %>% 
+  mutate(alpha_post = n_sir+alpha0,
+         beta_post = words_in_chapter-n_sir+beta0,
+         average_post = alpha_post/(alpha_post+beta_post),
+         cred_int_l = qbeta(.025, alpha_post, beta_post),
+         cred_int_h = qbeta(.975, alpha_post, beta_post)) ->
+  sir_number_bayes
+
+
+sir_number %>%
+  mutate(cred_int = cred_int_h - cred_int_l) ->
+  sir_number
+
+as_tibble(sir_number[which.max(sir_number$cred_int),]) 
+```
+
+
+### 1.5
+```{r}
+
+as_tibble(sir_number[which.min(sir_number$length_int),]) 
+
+```
+
+### 1.6
+```{r}
+as_tibble(sir_number[which.min(sir_number$cred_int),]) 
+
+```
+
